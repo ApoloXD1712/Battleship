@@ -59,7 +59,7 @@ private:
     void log_event(const string& event) {
         lock_guard<mutex> lock(mtx_);
         ofstream log(LOG_FILE, ios::app);
-        log << chrono::system_clock::to_time_t(chrono::system_clock::now()) << " - " << event << endl;
+        log << std::chrono::system_clock::to_time_t(std::chrono::system_clock::now()) << " - " << event << endl;
     }
 
     void start_accept() {
@@ -82,13 +82,15 @@ private:
 
     void start_reading(int player_id) {
         auto& player = *players_[player_id];
-        auto buffer = make_shared<boost::beast::flat_buffer>();
-        async_read(player.socket, *buffer, [this, player_id, buffer](boost::system::error_code ec, size_t) {
-            if (!ec) {
-                string data(boost::asio::buffer_cast<const char*>(buffer->data()), buffer->size());
-                process_message(player_id, data);
-            }
-        });
+        auto buffer = make_shared<vector<char>>(1024);
+        player.socket.async_read_some(boost::asio::buffer(*buffer),
+            [this, player_id, buffer](boost::system::error_code ec, size_t bytes_transferred) {
+                if (!ec) {
+                    string data(buffer->begin(), buffer->begin() + bytes_transferred);
+                    process_message(player_id, data);
+                }
+                start_reading(player_id);
+            });
     }
 
     void process_message(int player_id, const string& msg) {
