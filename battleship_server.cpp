@@ -2,6 +2,7 @@
 #include <fstream>
 #include <chrono>
 #include <iostream>
+#include <mutex>
 
 BattleshipServer::BattleshipServer(boost::asio::io_context& ioc, int port)
     : acceptor_(ioc, boost::asio::ip::tcp::endpoint(boost::asio::ip::tcp::v4(), port))
@@ -59,19 +60,53 @@ void BattleshipServer::handle_client(std::shared_ptr<boost::asio::ip::tcp::socke
 void BattleshipServer::start_reading(int player_id) {
     auto& player = *players_[player_id];
     auto buffer = std::make_shared<std::vector<char>>(buffer_size_);
-    player.socket.async_read_some(boost::asio::buffer(*buffer),
+
+    player.get_socket().async_read_some(boost::asio::buffer(*buffer),
         [this, player_id, buffer](boost::system::error_code ec, size_t bytes_transferred) {
             if (!ec) {
-                std::string data(buffer->begin(), buffer->begin() + bytes_transferred);
-                process_message(player_id, data);
-            } else if (ec != boost::asio::error::operation_aborted) {
-                // Manejar desconexión
-                log_event("Player " + std::to_string(player_id) + " disconnected");
-                cleanup_resources();
+                auto& player = *players_[player_id];
+                player.append_to_buffer(std::string(buffer->data(), bytes_transferred));
+
+                while (player.has_complete_message()) {
+                    std::string message = player.extract_message();
+                    process_message(player_id, message); // procesamos mensaje limpio
+                }
+
+                start_reading(player_id); // seguimos leyendo
+            } else {
+                disconnect_player(player_id); // nuevo método de limpieza
             }
-            start_reading(player_id);
         });
 }
+
+void BattleshipServer::disconnect_player(int player_id) {
+    std::lock_guard<std::mutex> lock(mtx_);
+    
+    if (players_.count(player_id)) {
+        auto player = players_[player_id];
+        log_event("Jugador desconectado: " + player->get_name());
+
+        // Cerrar socket
+        boost::system::error_code ec;
+        player->get_socket().shutdown(boost::asio::ip::tcp::socket::shutdown_both, ec);
+        player->get_socket().close();
+
+        // Quitar de sesión si está
+        for (auto it = games_.begin(); it != games_.end(); ++it) {
+            if (it->player1 == player || it->player2 == player) {
+                Player* other = (it->player1 == player) ? it->player2 : it->player1;
+                if (other) {
+                    other->send_message("OPPONENT_DISCONNECTED\n");
+                }
+                games_.erase(it);
+                break;
+            }
+        }
+
+        players_.erase(player_id);
+    }
+}
+
 
 void BattleshipServer::process_message(int player_id, const std::string& msg) {
     log_event("Received from Player " + std::to_string(player_id) + ": " + msg);
