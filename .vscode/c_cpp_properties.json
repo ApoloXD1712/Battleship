@@ -5,17 +5,17 @@
             "includePath": [
                 "${workspaceFolder}/**",
                 "C:/MinGW/bin",
-                "C:/Boost/boost_1_87_0/boost_1_87_0"
-
+                "C:/Boost/boost_1_87_0/boost_1_87_0",
+                "C:/Program Files/CMake/bin"
             ],
             "defines": [
                 "_DEBUG",
                 "UNICODE",
                 "_UNICODE"
             ],
-            "compilerPath": "C:\\MinGW\\bin\\gcc.exe",
+            "compilerPath": "C://MinGW//bin//gcc.exe",
             "cStandard": "c11",
-            "cppStandard": "gnu++14",
+            "cppStandard": "c++17",
             "intelliSenseMode": "windows-gcc-x86"
         }
     ],

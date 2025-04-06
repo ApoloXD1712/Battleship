@@ -1,64 +1,37 @@
 #include "game.h"
+#include <sstream>
 
-Game::Game(Player* p1, Player* p2)
-    : player1_(p1), player2_(p2), current_turn_(p1), game_over_(false) {}
-
-Player* Game::get_player1() const { return player1_; }
-Player* Game::get_player2() const { return player2_; }
-
-bool Game::is_player_turn(Player* player) const {
-    return current_turn_ == player;
-}
-
-bool Game::has_ended() const {
-    return game_over_;
-}
+Game::Game(Player* player1, Player* player2)
+    : player1_(player1), player2_(player2), current_turn_(player1) {}
 
 void Game::process_move(Player* player, int x, int y) {
-    if (game_over_) return;
-    if (!is_player_turn(player)) {
+    if (player != current_turn_) {
         player->send_message("NOT_YOUR_TURN\n");
         return;
     }
 
     Player* opponent = (player == player1_) ? player2_ : player1_;
-    bool hit = apply_shot(player, opponent, x, y);
+    bool hit = false;
 
-    // Informar a ambos jugadores del resultado
-    player->send_message(hit ? "HIT\n" : "MISS\n");
-    opponent->send_message("OPPONENT_FIRED:" + std::to_string(x) + "," + std::to_string(y) + ":" + (hit ? "HIT\n" : "MISS\n"));
+    for (const auto& ship : opponent->get_ships()) {
+        int dx = ship.horizontal ? 1 : 0;
+        int dy = ship.horizontal ? 0 : 1;
 
-    if (check_victory(opponent)) {
-        end_game(player, opponent);
-    } else {
-        // Cambiar turno
-        current_turn_ = opponent;
+        for (int i = 0; i < ship.length; ++i) {
+            if (ship.x + i * dx == x && ship.y + i * dy == y) {
+                hit = true;
+                break;
+            }
+        }
+
+        if (hit) break;
     }
-}
 
-bool Game::apply_shot(Player* attacker, Player* defender, int x, int y) {
-    char(&board)[10][10] = defender->get_board();
-    if (board[x][y] == 'S') {
-        board[x][y] = 'X'; // impactado
-        return true;
-    } else if (board[x][y] == '.') {
-        board[x][y] = 'O'; // agua
-        return false;
-    }
-    return false; // ya disparado
-}
+    std::ostringstream response;
+    response << (hit ? "HIT" : "MISS") << ":" << x << "," << y << "\n";
+    player->send_message(response.str());
+    opponent->send_message(response.str());
 
-bool Game::check_victory(Player* defender) {
-    char(&board)[10][10] = defender->get_board();
-    for (int i = 0; i < 10; ++i)
-        for (int j = 0; j < 10; ++j)
-            if (board[i][j] == 'S')
-                return false; // todavía hay barcos
-    return true;
-}
-
-void Game::end_game(Player* winner, Player* loser) {
-    game_over_ = true;
-    winner->send_message("VICTORY\n");
-    loser->send_message("DEFEAT\n");
+    // Alternar turno
+    current_turn_ = opponent;
 }

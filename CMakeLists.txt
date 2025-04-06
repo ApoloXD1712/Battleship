@@ -22,6 +22,9 @@ set(HEADERS
     battleship_server.h
 )
 
+set(CMAKE_CXX_STANDARD 17)
+set(CMAKE_CXX_STANDARD_REQUIRED ON)
+
 # Crear el ejecutable
 add_executable(servidor ${SOURCES} ${HEADERS})
 
