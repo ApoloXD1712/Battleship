@@ -1,8 +1,12 @@
 # Battleship
 
 # Introducción
+En la actualidad, la implementación de sistemas interactivos que permitan la comunicación en tiempo real entre usuarios es cada vez más común, especialmente en aplicaciones orientadas al entretenimiento digital. Por esta razón, este proyecto se basa en el desarrollo de una versión del clásico juego Batalla Naval utilizando un modelo de comunicación cliente/servidor.
+
+La aplicación permite que dos jugadores, conectados de forma remota, se enfrenten en una partida uno a uno, gestionando de manera eficiente el intercambio de mensajes y movimientos a través de una conexión de red. Todo el flujo de comunicación está diseñado para funcionar de forma concurrente, asegurando una experiencia fluida y sincronizada entre ambos participantes.
+
+El sistema está desarrollado en C++ y hace uso de sockets para establecer la comunicación entre el cliente y el servidor. Además, el protocolo que define el formato y la interpretación de los mensajes entre jugadores ha sido implementado de forma personalizada, adaptándose a las necesidades específicas del juego.
 ## Contexto y justificación
-Este documento determina el desarrollo de un servidor del juego de batalla naval con el objetivo de ser capaz de soportar múltiples partidas simultáneas entre distintas parejas de jugadores. Este desarrollo tiene como objetivo el crear un espacio escalable y de calidad, en el que la comunicación se produzca de forma eficiente, utilizando para ello un protocolo de comunicación propio.
 El objetivo general del proyecto es gestionar las partidas de forma eficiente y segura, manteniendo una buena calidad en la integridad de los datos y en la experiencia del usuario. Para ello, para la implementación del servidor se ha utilizado el lenguaje C++, junto a tecnologías de redes y despliegue en AWS.
 El alcance del proyecto cubre la gestión de sesiones de juego, el control de las validaciones de los movimientos realizados en el juego, la baja latencia, así como también la comunicación entre los jugadores.
 # Desarrollo
