@@ -4,3 +4,31 @@
 2025-04-09 08:43:36,220 - Sent: EXIT
 2025-04-09 08:43:36,299 - Received: ERROR: Comando no reconocido
 
+2025-04-09 14:21:33,900 - Sent: NICKNAME|Alejo
+2025-04-09 14:21:34,109 - Received: ERROR: Comando no reconocido
+
+2025-04-09 14:21:41,179 - Sent: MOVE|0 1
+2025-04-09 14:21:41,264 - Received: ERROR: Comando no reconocido
+
+2025-04-09 14:21:46,268 - Sent: MOVE|A3
+2025-04-09 14:21:46,357 - Received: ERROR: Comando no reconocido
+
+2025-04-09 14:32:11,605 - Sent: EXIT
+2025-04-09 14:42:43,916 - Sent: NICKNAME|Alejo
+2025-04-09 14:42:44,004 - Received: ERROR: Comando no reconocido
+
+2025-04-09 14:42:49,315 - Sent: MOVE|2,3
+2025-04-09 14:42:49,400 - Received: ERROR: Comando no reconocido
+
+2025-04-09 14:42:57,515 - Sent: MOVE|0,1
+2025-04-09 14:42:57,601 - Received: ERROR: Comando no reconocido
+
+2025-04-09 14:43:11,063 - Sent: EXIT
+2025-04-09 14:43:11,150 - Received: ERROR: Comando no reconocido
+
+2025-04-09 14:43:19,014 - Sent: NICKNAME|Alejo
+2025-04-09 14:43:19,100 - Received: ERROR: Comando no reconocido
+
+2025-04-09 14:43:29,578 - Sent: MOVE|2,3
+2025-04-09 14:43:29,665 - Received: ERROR: Comando no reconocido
+
