@@ -5,7 +5,7 @@ import tkinter as tk
 from tkinter import messagebox
 import websockets
 
-SERVER_IP = "34.238.123.42"
+SERVER_IP = "34.205.139.115"
 PORT = 8080
 BOARD_SIZE = 5
 
