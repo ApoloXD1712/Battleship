@@ -32,3 +32,16 @@
 2025-04-09 14:43:29,578 - Sent: MOVE|2,3
 2025-04-09 14:43:29,665 - Received: ERROR: Comando no reconocido
 
+2025-04-09 14:48:35,539 - Sent: NICKNAME|Alejo
+2025-04-09 14:48:35,629 - Received: ERROR: Comando no reconocido
+
+2025-04-09 14:48:40,862 - Sent: MOVE|2,3
+2025-04-09 14:48:40,947 - Received: ERROR: Comando no reconocido
+
+2025-04-09 14:48:47,846 - Sent: MOVE|2,3
+2025-04-09 14:48:47,932 - Received: ERROR: Comando no reconocido
+
+2025-04-09 14:48:53,938 - Sent: EXIT
+2025-04-09 14:48:54,116 - Received: ERROR: Comando no reconocido
+
+2025-04-09 14:51:54,801 - Sent: EXIT

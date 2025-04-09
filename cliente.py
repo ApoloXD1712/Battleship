@@ -1,101 +1,137 @@
+
 import asyncio
+import threading
+import tkinter as tk
+from tkinter import messagebox
 import websockets
-import logging
-import os
 
-SERVER_IP = "52.207.215.7"
+SERVER_IP = "34.238.123.42"
 PORT = 8080
-LOG_FILE = "client_log.txt"
-
-# Inicializar el tablero del jugador (solo para mostrar sus disparos)
 BOARD_SIZE = 5
-board = [['~' for _ in range(BOARD_SIZE)] for _ in range(BOARD_SIZE)]
 
-logging.basicConfig(filename=LOG_FILE, level=logging.INFO,
-                    format='%(asctime)s - %(message)s')
+class BattleshipClient:
+    def __init__(self, root):
+        self.root = root
+        self.root.title("Battleship")
+        self.buttons = [[None for _ in range(BOARD_SIZE)] for _ in range(BOARD_SIZE)]
+        self.nickname = None
+        self.opponent_name = "Esperando oponente..."
+        self.websocket = None
+        self.last_move = None
+        self.status_label = None
+        self.turn_label = None
+        self.create_login_screen()
 
+    def create_login_screen(self):
+        self.clear_window()
+        tk.Label(self.root, text="Ingresa tu nickname:").pack()
+        self.nick_entry = tk.Entry(self.root)
+        self.nick_entry.pack()
+        tk.Button(self.root, text="Conectar", command=self.start_game).pack()
 
-def clear_screen():
-    os.system('cls' if os.name == 'nt' else 'clear')
+    def clear_window(self):
+        for widget in self.root.winfo_children():
+            widget.destroy()
 
+    def create_board(self):
+        self.clear_window()
 
-def display_board():
-    print("   " + " ".join(str(i) for i in range(BOARD_SIZE)))
-    for idx, row in enumerate(board):
-        print(f"{idx}  " + " ".join(row))
-    print()
+        top_frame = tk.Frame(self.root)
+        top_frame.pack()
 
+        self.status_label = tk.Label(top_frame, text=f"Jugador: {self.nickname} | Rival: {self.opponent_name}", font=('Arial', 12, 'bold'))
+        self.status_label.pack()
 
-def update_board(x, y, result):
-    if result == "HIT" or result == "SUNK":
-        board[x][y] = 'X'
-    elif result == "MISS":
-        board[x][y] = 'O'
+        self.turn_label = tk.Label(self.root, text="Esperando inicio...", font=('Arial', 10))
+        self.turn_label.pack()
 
+        frame = tk.Frame(self.root)
+        frame.pack(pady=10)
 
-async def send_message(websocket, message):
-    await websocket.send(message)
-    logging.info(f"Sent: {message}")
-    response = await websocket.recv()
-    logging.info(f"Received: {response}")
-    return response
+        for x in range(BOARD_SIZE):
+            for y in range(BOARD_SIZE):
+                btn = tk.Button(frame, text="~", width=4, height=2,
+                                command=lambda x=x, y=y: self.send_move(x, y))
+                btn.grid(row=x, column=y)
+                self.buttons[x][y] = btn
 
+    def start_game(self):
+        self.nickname = self.nick_entry.get()
+        if not self.nickname:
+            messagebox.showerror("Error", "Debes ingresar un nickname.")
+            return
+        self.create_board()
+        threading.Thread(target=self.run_client, daemon=True).start()
 
-async def play_battleship():
-    uri = f"ws://{SERVER_IP}:{PORT}"
-    async with websockets.connect(uri) as websocket:
-        nickname = input("Ingresa tu nickname: ")
-        await send_message(websocket, f"NICKNAME|{nickname}")
+    async def connect(self):
+        uri = f"ws://{SERVER_IP}:{PORT}"
+        self.websocket = await websockets.connect(uri)
+        await self.websocket.send(f"NICKNAME:{self.nickname}")
+        await self.websocket.send("READY")
 
+    async def handle_messages(self):
         while True:
-            clear_screen()
-            display_board()
-            command = input("Introduce tu movimiento (Ej: 2 3) o escribe 'exit' para salir: ")
-
-            if command.lower() == 'exit':
-                await send_message(websocket, "EXIT")
-                break
-
-            try:
-                x_str, y_str = command.strip().split()
-                x, y = int(x_str), int(y_str)
-            except ValueError:
-                print("Formato inválido. Usa: fila columna (Ej: 1 2)")
-                continue
-
-            response = await send_message(websocket, f"MOVE|{x},{y}")
+            response = await self.websocket.recv()
             response = response.strip()
 
-            if response == "NOT_YOUR_TURN":
-                print("⏳ No es tu turno. Espera al oponente.")
-                await asyncio.sleep(2)
-                continue
-
             if response == "YOU_WIN":
-                update_board(x, y, "HIT")
-                clear_screen()
-                display_board()
-                print("🎉 ¡Ganaste el juego!")
+                self.mark_last_move("X", "green")
+                self.turn_label.config(text="🎉 ¡Ganaste el juego!")
+                messagebox.showinfo("¡Victoria!", "🎉 ¡Ganaste el juego!")
                 break
             elif response == "YOU_LOSE":
-                clear_screen()
-                display_board()
-                print("☠️  Has perdido el juego.")
+                self.turn_label.config(text="☠️ Has perdido el juego.")
+                messagebox.showinfo("Derrota", "☠️ Has perdido el juego.")
                 break
+            elif response == "NOT_YOUR_TURN":
+                self.turn_label.config(text="⏳ No es tu turno.")
             elif response == "HIT":
-                print("🔥 Impacto directo.")
-                update_board(x, y, "HIT")
+                self.mark_last_move("X", "red")
+                self.turn_label.config(text="🔥 ¡Impacto!")
             elif response == "SUNK":
-                print("🚢 ¡Hundiste un barco!")
-                update_board(x, y, "SUNK")
+                self.mark_last_move("X", "black")
+                self.turn_label.config(text="🚢 ¡Barco hundido!")
+                messagebox.showinfo("Barco Hundido", "🚢 ¡Hundiste un barco!")
             elif response == "MISS":
-                print("💨 Agua...")
-                update_board(x, y, "MISS")
+                self.mark_last_move("O", "light blue")
+                self.turn_label.config(text="💨 Fallaste el tiro.")
+            elif "MATCH_FOUND" in response:
+                self.turn_label.config(text="Partida encontrada. Espera tu turno.")
+            elif "YOUR_TURN" in response:
+                self.turn_label.config(text="🎯 Es tu turno.")
+            elif "WAIT_TURN" in response:
+                self.turn_label.config(text="🕒 Esperando turno del oponente.")
+            elif response.startswith("OPPONENT|"):
+                self.opponent_name = response.split("|")[1]
+                self.status_label.config(text=f"Jugador: {self.nickname} | Rival: {self.opponent_name}")
             else:
-                print(f"Respuesta desconocida del servidor: {response}")
+                print("Respuesta desconocida:", response)
 
-            await asyncio.sleep(2)
+    def mark_last_move(self, text, color):
+        if self.last_move:
+            x, y = self.last_move
+            self.buttons[x][y].config(text=text, bg=color)
 
+    def coords_to_label(self, x, y):
+        col_letter = chr(ord('a') + y)  # columnas en minúscula: a, b, c...
+        return f"{col_letter}{x}"
+
+    async def send_move_async(self, x, y):
+        self.last_move = (x, y)
+        coord = self.coords_to_label(x, y)
+        await self.websocket.send(f"FIRE:{coord}")
+
+    def send_move(self, x, y):
+        asyncio.run_coroutine_threadsafe(self.send_move_async(x, y), self.loop)
+
+    def run_client(self):
+        self.loop = asyncio.new_event_loop()
+        asyncio.set_event_loop(self.loop)
+        self.loop.run_until_complete(self.connect())
+        self.loop.create_task(self.handle_messages())
+        self.loop.run_forever()
 
 if __name__ == "__main__":
-    asyncio.run(play_battleship())
+    root = tk.Tk()
+    app = BattleshipClient(root)
+    root.mainloop()
