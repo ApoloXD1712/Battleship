@@ -13,8 +13,8 @@ public:
     void set_session(std::shared_ptr<WebSocketSession> session);
     std::shared_ptr<WebSocketSession> get_session() const;
 
-    void mark_ready();
-    bool is_ready() const;
+    void mark_ready(){ ready_ = true; }
+    bool is_ready() const{ return ready_; }
     std::string nickname() const;
 
     void send_message(const std::string& message);

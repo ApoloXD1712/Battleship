@@ -20,6 +20,7 @@ class BattleshipClient:
         self.last_move = None
         self.status_label = None
         self.turn_label = None
+        self.board_enabled = False
         self.create_login_screen()
 
     def create_login_screen(self):
@@ -42,7 +43,7 @@ class BattleshipClient:
         self.status_label = tk.Label(top_frame, text=f"Jugador: {self.nickname} | Rival: {self.opponent_name}", font=('Arial', 12, 'bold'))
         self.status_label.pack()
 
-        self.turn_label = tk.Label(self.root, text="Esperando inicio...", font=('Arial', 10))
+        self.turn_label = tk.Label(self.root, text="⏳ Esperando emparejamiento...", font=('Arial', 10))
         self.turn_label.pack()
 
         frame = tk.Frame(self.root)
@@ -51,9 +52,16 @@ class BattleshipClient:
         for x in range(BOARD_SIZE):
             for y in range(BOARD_SIZE):
                 btn = tk.Button(frame, text="~", width=4, height=2,
+                                state='disabled',
                                 command=lambda x=x, y=y: self.send_move(x, y))
                 btn.grid(row=x, column=y)
                 self.buttons[x][y] = btn
+
+    def set_board_state(self, state):
+        for row in self.buttons:
+            for btn in row:
+                btn.config(state=state)
+        self.board_enabled = (state == 'normal')
 
     def start_game(self):
         self.nickname = self.nick_entry.get()
@@ -78,13 +86,16 @@ class BattleshipClient:
                 self.mark_last_move("X", "green")
                 self.turn_label.config(text="🎉 ¡Ganaste el juego!")
                 messagebox.showinfo("¡Victoria!", "🎉 ¡Ganaste el juego!")
+                self.set_board_state('disabled')
                 break
             elif response == "YOU_LOSE":
                 self.turn_label.config(text="☠️ Has perdido el juego.")
                 messagebox.showinfo("Derrota", "☠️ Has perdido el juego.")
+                self.set_board_state('disabled')
                 break
             elif response == "NOT_YOUR_TURN":
                 self.turn_label.config(text="⏳ No es tu turno.")
+                self.set_board_state('disabled')
             elif response == "HIT":
                 self.mark_last_move("X", "red")
                 self.turn_label.config(text="🔥 ¡Impacto!")
@@ -96,11 +107,13 @@ class BattleshipClient:
                 self.mark_last_move("O", "light blue")
                 self.turn_label.config(text="💨 Fallaste el tiro.")
             elif "MATCH_FOUND" in response:
-                self.turn_label.config(text="Partida encontrada. Espera tu turno.")
+                self.turn_label.config(text="🎯 ¡Partida encontrada! Esperando turno...")
             elif "YOUR_TURN" in response:
                 self.turn_label.config(text="🎯 Es tu turno.")
+                self.set_board_state('normal')
             elif "WAIT_TURN" in response:
                 self.turn_label.config(text="🕒 Esperando turno del oponente.")
+                self.set_board_state('disabled')
             elif response.startswith("OPPONENT|"):
                 self.opponent_name = response.split("|")[1]
                 self.status_label.config(text=f"Jugador: {self.nickname} | Rival: {self.opponent_name}")
@@ -113,13 +126,15 @@ class BattleshipClient:
             self.buttons[x][y].config(text=text, bg=color)
 
     def coords_to_label(self, x, y):
-        col_letter = chr(ord('a') + y)  # columnas en minúscula: a, b, c...
+        col_letter = chr(ord('a') + y)
         return f"{col_letter}{x}"
 
     async def send_move_async(self, x, y):
-        self.last_move = (x, y)
-        coord = self.coords_to_label(x, y)
-        await self.websocket.send(f"FIRE:{coord}")
+        if self.board_enabled:
+            self.last_move = (x, y)
+            coord = self.coords_to_label(x, y)
+            await self.websocket.send(f"FIRE:{coord}")
+            self.set_board_state('disabled')  # bloquear hasta nueva respuesta
 
     def send_move(self, x, y):
         asyncio.run_coroutine_threadsafe(self.send_move_async(x, y), self.loop)
