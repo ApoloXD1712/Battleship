@@ -1,0 +1,6 @@
+2025-04-09 08:42:03,368 - Sent: NICKNAME|Juan
+2025-04-09 08:42:03,448 - Received: ERROR: Comando no reconocido
+
+2025-04-09 08:43:36,220 - Sent: EXIT
+2025-04-09 08:43:36,299 - Received: ERROR: Comando no reconocido
+

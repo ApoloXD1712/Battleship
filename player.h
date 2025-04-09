@@ -1,50 +1,39 @@
-#ifndef PLAYER_H
-#define PLAYER_H
-
+#pragma once
 #include <string>
-#include <vector>
 #include <memory>
-#include <mutex>
-#include <boost/asio.hpp>
+#include <vector>
+#include "ship.h"
 
-struct Ship {
-    int x, y;
-    bool horizontal;
-    int length;
-};
+class WebSocketSession;
 
 class Player {
 public:
-    Player(std::shared_ptr<boost::asio::ip::tcp::socket> socket);
+    explicit Player(const std::string& nickname);
+
+    void set_session(std::shared_ptr<WebSocketSession> session);
+    std::shared_ptr<WebSocketSession> get_session() const;
+
+    void mark_ready();
+    bool is_ready() const;
+    std::string nickname() const;
 
     void send_message(const std::string& message);
 
-    bool is_ready() const;
-    bool is_defeated() const;
-    void mark_ready();
-    void register_hit(int x, int y);
-
-    bool has_all_ships_placed() const;
-    void place_random_ships();
-
-    const std::vector<Ship>& get_ships() const;
-
-    // Métodos para comunicación (socket y buffer)
-    boost::asio::ip::tcp::socket& get_socket();
     void append_to_buffer(const std::string& data);
     bool has_complete_message() const;
     std::string extract_message();
 
+    void place_random_ships();
+    const std::vector<Ship>& get_ships() const;
+    void register_hit(int x, int y);
+    bool is_defeated() const;
+    const std::vector<std::pair<int, int>>& get_hits() const;
+
 private:
-    std::shared_ptr<boost::asio::ip::tcp::socket> socket_;
-    mutable std::mutex mtx_;
-    bool ready_;
-    std::vector<Ship> ships_;
+    std::string nickname_;
+    bool ready_ = false;
+    std::shared_ptr<WebSocketSession> session_;
     std::string read_buffer_;
+    std::vector<Ship> ships_;
     std::vector<std::pair<int, int>> hits_;
-
-    static constexpr int kBoardSize = 10;
-    static constexpr int kTotalShips = 5;
 };
-
-#endif

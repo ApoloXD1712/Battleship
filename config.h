@@ -6,4 +6,4 @@ namespace BattleshipConfig {
     constexpr const char* LOG_FILE = "server_log.txt";
     constexpr int BUFFER_SIZE = 1024;
     constexpr int SERVER_PORT = 8080;
-} 
+}

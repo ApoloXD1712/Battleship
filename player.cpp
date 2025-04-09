@@ -1,31 +1,50 @@
 #include "player.h"
-#include <iostream>
+#include "websocket_session.h"
 #include <random>
 #include <algorithm>
 
-Player::Player(std::shared_ptr<boost::asio::ip::tcp::socket> socket)
-    : socket_(socket), ready_(false) {}
+Player::Player(const std::string& nickname)
+    : nickname_(nickname), ready_(false) {}
 
-void Player::send_message(const std::string& message) {
-    boost::asio::write(*socket_, boost::asio::buffer(message));
+void Player::set_session(std::shared_ptr<WebSocketSession> session) {
+    session_ = session;
 }
 
-bool Player::is_ready() const {
-    std::lock_guard<std::mutex> lock(mtx_);
-    return ready_;
+std::shared_ptr<WebSocketSession> Player::get_session() const {
+    return session_;
 }
 
 void Player::mark_ready() {
-    std::lock_guard<std::mutex> lock(mtx_);
     ready_ = true;
 }
 
-bool Player::has_all_ships_placed() const {
-    return ships_.size() >= kTotalShips;
+bool Player::is_ready() const {
+    return ready_;
 }
 
-const std::vector<Ship>& Player::get_ships() const {
-    return ships_;
+std::string Player::nickname() const {
+    return nickname_;
+}
+
+void Player::send_message(const std::string& message) {
+    if (session_) {
+        session_->send(message);
+    }
+}
+
+void Player::append_to_buffer(const std::string& data) {
+    read_buffer_ += data;
+}
+
+bool Player::has_complete_message() const {
+    return read_buffer_.find('\n') != std::string::npos;
+}
+
+std::string Player::extract_message() {
+    size_t pos = read_buffer_.find('\n');
+    std::string message = read_buffer_.substr(0, pos);
+    read_buffer_.erase(0, pos + 1);
+    return message;
 }
 
 void Player::place_random_ships() {
@@ -34,7 +53,7 @@ void Player::place_random_ships() {
     std::random_device rd;
     std::mt19937 gen(rd());
     std::uniform_int_distribution<> dist_dir(0, 1);
-    std::uniform_int_distribution<> dist_pos(0, kBoardSize - 1);
+    std::uniform_int_distribution<> dist_pos(0, 9);
 
     for (int length : ship_lengths) {
         bool placed = false;
@@ -46,7 +65,7 @@ void Player::place_random_ships() {
             int dx = horizontal ? 1 : 0;
             int dy = horizontal ? 0 : 1;
 
-            if ((horizontal && x + length > kBoardSize) || (!horizontal && y + length > kBoardSize))
+            if ((horizontal && x + length > 10) || (!horizontal && y + length > 10))
                 continue;
 
             bool overlap = false;
@@ -76,6 +95,10 @@ void Player::place_random_ships() {
     }
 }
 
+const std::vector<Ship>& Player::get_ships() const {
+    return ships_;
+}
+
 void Player::register_hit(int x, int y) {
     hits_.emplace_back(x, y);
 }
@@ -93,4 +116,8 @@ bool Player::is_defeated() const {
         }
     }
     return true;
+}
+
+const std::vector<std::pair<int, int>>& Player::get_hits() const {
+    return hits_;
 }

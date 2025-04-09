@@ -50,6 +50,7 @@ def play_game():
             print("Entrada inválida. Usa formato: x y")
     
     print("¡Ganaste! Has hundido todos los barcos.")
+    print("Fin del juego, gracias por jugar!")
 
 if __name__ == "__main__":
     play_game()

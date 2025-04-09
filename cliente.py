@@ -2,7 +2,7 @@ import asyncio
 import websockets
 import logging
 
-SERVER_IP = "your-aws-instance-ip"
+SERVER_IP = "3.84.251.202"
 PORT = 8080
 LOG_FILE = "client_log.txt"
 

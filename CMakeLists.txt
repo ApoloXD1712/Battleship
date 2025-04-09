@@ -1,45 +1,44 @@
 cmake_minimum_required(VERSION 3.10)
 project(Battleship)
 
+# Usar C++17
 set(CMAKE_CXX_STANDARD 17)
 set(CMAKE_CXX_STANDARD_REQUIRED ON)
 
-# Encontrar Boost
+# Buscar Boost
 find_package(Boost REQUIRED COMPONENTS system)
 
-# Agregar los archivos fuente
+# Archivos fuente
 set(SOURCES
-    main.cpp
+    main.cpp               # o servidor.cpp si mantenés ese nombre
     player.cpp
     game.cpp
     battleship_server.cpp
+    websocket_session.cpp
 )
 
-# Agregar los archivos de cabecera
+# Archivos de encabezado (opcional, para IDEs)
 set(HEADERS
     player.h
     game.h
     battleship_server.h
 )
 
-set(CMAKE_CXX_STANDARD 17)
-set(CMAKE_CXX_STANDARD_REQUIRED ON)
-
 # Crear el ejecutable
 add_executable(servidor ${SOURCES} ${HEADERS})
 
-# Vincular con Boost
-target_link_libraries(servidor PRIVATE Boost::system)
-
-# Configurar directorios de inclusión
+# Incluir directorios
 target_include_directories(servidor PRIVATE ${CMAKE_CURRENT_SOURCE_DIR})
 
-# Configurar opciones de compilación
+# Enlazar Boost
+target_link_libraries(servidor PRIVATE Boost::system pthread)
+
+# Opciones de compilación
 if(MSVC)
     target_compile_options(servidor PRIVATE /W4)
 else()
     target_compile_options(servidor PRIVATE -Wall -Wextra -Wpedantic)
 endif()
 
-# Configurar el directorio de salida
-set(CMAKE_RUNTIME_OUTPUT_DIRECTORY ${CMAKE_BINARY_DIR}/bin) 
+# Directorio de salida
+set(CMAKE_RUNTIME_OUTPUT_DIRECTORY ${CMAKE_BINARY_DIR}/bin)

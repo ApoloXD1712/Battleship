@@ -1,7 +1,9 @@
-#pragma once
+#ifndef BATTLESHIP_SERVER_H
+#define BATTLESHIP_SERVER_H
 
 #include <boost/asio.hpp>
 #include <unordered_map>
+#include <vector>
 #include <memory>
 #include <mutex>
 #include "player.h"
@@ -10,16 +12,17 @@
 class BattleshipServer {
 public:
     BattleshipServer(boost::asio::io_context& io_context, short port);
-    void start_accept();
-    void start_reading(int player_id);
-    void process_message(int player_id, const std::string& message);
-    void disconnect_player(int player_id);
 
 private:
+    void start_accept(); // Aceptar conexiones entrantes
+    void register_player(std::shared_ptr<Player> player); // Agregar jugador listo
+    void match_players(); // Emparejar jugadores listos
+
+    boost::asio::io_context& io_context_;
     boost::asio::ip::tcp::acceptor acceptor_;
-    std::unordered_map<int, std::shared_ptr<Player>> players_;
-    std::unordered_map<int, std::shared_ptr<Game>> active_games_;
-    int next_player_id_;
-    const size_t buffer_size_ = 1024;
-    std::mutex mtx_;
+    std::unordered_map<std::string, std::shared_ptr<Player>> players_;
+    std::vector<std::shared_ptr<Game>> games_;
+    std::mutex mutex_;
 };
+
+#endif // BATTLESHIP_SERVER_H
