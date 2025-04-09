@@ -1,57 +1,93 @@
-# Battleship
+# Battleship - Proyecto de Telemática
 
-# Introducción
-En la actualidad, la implementación de sistemas interactivos que permitan la comunicación en tiempo real entre usuarios es cada vez más común, especialmente en aplicaciones orientadas al entretenimiento digital. Por esta razón, este proyecto se basa en el desarrollo de una versión del clásico juego Batalla Naval utilizando un modelo de comunicación cliente/servidor.
+## Desarrolladores
 
-La aplicación permite que dos jugadores, conectados de forma remota, se enfrenten en una partida uno a uno, gestionando de manera eficiente el intercambio de mensajes y movimientos a través de una conexión de red. Todo el flujo de comunicación está diseñado para funcionar de forma concurrente, asegurando una experiencia fluida y sincronizada entre ambos participantes.
+- Alejandro Cadavid Osorio
+- Juan Alberto Rodríguez
 
-El sistema está desarrollado en C++ y hace uso de sockets para establecer la comunicación entre el cliente y el servidor. Además, el protocolo que define el formato y la interpretación de los mensajes entre jugadores ha sido implementado de forma personalizada, adaptándose a las necesidades específicas del juego.
-## Contexto y justificación
-El objetivo general del proyecto es gestionar las partidas de forma eficiente y segura, manteniendo una buena calidad en la integridad de los datos y en la experiencia del usuario. Para ello, para la implementación del servidor se ha utilizado el lenguaje C++, junto a tecnologías de redes y despliegue en AWS.
-El alcance del proyecto cubre la gestión de sesiones de juego, el control de las validaciones de los movimientos realizados en el juego, la baja latencia, así como también la comunicación entre los jugadores.
-# Desarrollo
-Cuando empezamos a desarrollar, separamos por clases los componentes principales que tendría el código, los cuales se dividen en:
-* Servidor (Desarrollado en C++):
-    - Battleship_server.h/cpp: Este se encarga de manejar las conexiones entrantes, gestionando la lista de jugadores y coordinando los juegos activos, además de implementar el sistema de emparejamiento.
-    - Player.h/cpp: Define la clase Player que representa a cada jugador conectado, manteniendo el estado del jugador y manejando la comunicación con el cliente.
-    - Game.h/cpp: Maneja la lógica del juego de batalla naval, manejando así el tablero y los movimientos, controla también el flujo del juego.
-    - Config.h: Archivo de configuración
-    - Main.cpp: Punto de entrada del servidor
+## Introducción
 
-* Cliente (Desarrollado en Python):
-    - Client.py: Cliente para conectarse al servidor
-    - Juego.py: Lógica del juego en el lado del Cliente
+En este proyecto se implementa una versión del clásico juego **Batalla Naval**, desarrollado como parte del curso de Telemática, con el objetivo de aplicar conceptos clave de programación en red y diseño de protocolos de comunicación. Utilizando sockets TCP, se diseñó una arquitectura cliente/servidor donde dos jugadores pueden competir remotamente, enviando y recibiendo mensajes mediante un protocolo personalizado.
 
-Ahora, teniendo en cuenta lo anteriormente mencionado, la arquitectura general del juego se describe así:
+La comunicación se basa en la API Berkeley de sockets, y tanto el manejo de turnos como el estado del juego se centralizan en el servidor. Este escenario permite poner en práctica conceptos como concurrencia, sincronización, validación de mensajes y manejo de errores.
 
-El servidor usa Boost.Asio para manejar las conexiones de red. A la hora de manejar clientes se implementa entonces un sistema de múltiples hilos para manejar varios clientes.
+## Desarrollo
 
-## Características principales (A nivel del servidor)
-* Manejo de conexiones TCP
-* Sistema de logging
-* Gestión de múltiples juegos simultáneamente hablando
-* Control de turnos y tiempo límite
+### Arquitectura General
 
-El cliente hace uso de websockets y cuenta con una interfaz de línea de comandos simple
-## Características principales (A nivel del cliente)
-* Conexión al servidor
-* Envío de movimientos por parte de ambos jugadores
-* Sistema de logging local
-* Manejo de nicknames (Para jugadores)
+El sistema se compone de tres elementos principales:
 
-## Flujo del Juego
-Este flujo será descrito por pasos, los pasos son:
-1. Los clientes se conectan al servidor
-2. Los jugadores ingresan sus nicknames
-3. El servidor se encarga de emparejar a los jugadores
-4. Los jugadores realizan movimientos de manera alternada
-5. El juego continúa hasta que un jugador gana o se desconecta
+- **Cliente**: Interfaz en consola (Python) que permite al jugador interactuar con el juego.
+- **Servidor**: Componente en C++ que gestiona el estado del juego, aplica las reglas, y administra las conexiones.
+- **Protocolo personalizado**: Define el formato y reglas de intercambio de mensajes entre cliente y servidor.
 
-## Tecnologías utilizadas
-* C++ con Boost.Asio para el servidor
-* Python con websockets para el cliente
-* CMake para la compilación del servidor
-* Sistema de logging para debugging
+### Detalles Técnicos
+
+- **Lenguaje del servidor**: C++ (uso obligatorio).
+- **Lenguaje del cliente**: Python 3.x.
+- **Sockets utilizados**: TCP (`SOCK_STREAM`).
+- **Concurrencia**: Implementada mediante hilos para permitir múltiples partidas simultáneas.
+
+### Ejecución del servidor
+
+```bash
+./servidor
+```
+
+### Ejecución del cliente
+
+```bash
+./cliente.py
+```
+
+## Protocolo de Comunicación
+
+El protocolo implementado sigue el formato de texto plano con mensajes estructurados del tipo:
+
+```
+<TIPO_MENSAJE>|<DATOS>
+```
+
+### Ejemplo de Vocabulario de Mensajes
+
+| Tipo de Mensaje | Datos | Descripción |
+|------------------|-------|-------------|
+| REGISTER         | nickname,email | Registro del jugador |
+| PLACE_SHIPS      | posiciones      | Envío de las posiciones de los barcos |
+| FIRE             | coordenada      | Disparo a coordenada enemiga |
+| RESULT           | hit/miss/sunk   | Resultado del disparo |
+| GAME_OVER        | win/lose        | Finalización de partida |
+| DISCONNECT       | mensaje         | Desconexión del cliente |
+
+Este protocolo es responsable de mantener sincronizados los estados de ambos jugadores y facilitar el desarrollo fluido del juego.
+
+## Aspectos Logrados
+
+- Comunicación bidireccional estable entre cliente y servidor.
+- Registro de logs tanto en cliente como en servidor.
+- Manejo de múltiples partidas concurrentes en el servidor.
+- Validación de reglas del juego (turnos, aciertos, hundimientos).
+- Visualización clara en consola (tableros propios y del enemigo).
+- Emparejamiento automático de jugadores.
+- Detección de desconexiones.
+- Implementación de una interfaz gráfica sencilla
+
+## Aspectos No Logrados / Posibles Mejoras
+
+- Persistencia de estadísticas de partidas.
+- Mejor manejo de errores inesperados.
+- Adición de comandos para chat entre jugadores.
+
+## Conclusiones
+
+Este proyecto ha sido fundamental para aplicar de forma práctica los conceptos teóricos vistos durante el curso, como el uso de sockets, programación concurrente, diseño de protocolos y sincronización entre múltiples clientes. La implementación de un juego multijugador en red nos permitió comprender de manera más profunda cómo funcionan las comunicaciones en tiempo real y los desafíos que conlleva la coordinación de múltiples actores distribuidos.
+
+## Referencias
+
+- [Guía de Sockets Beej](https://beej.us/guide/bgnet/)
+- [TCP Server-Client en C++](https://www.geeksforgeeks.org/tcp-server-client-implementation-in-c/)
+- [Sockets en Python](https://docs.python.org/3/library/socket.html)
+- [CMake](https://cmake.org/)
 
 
 
