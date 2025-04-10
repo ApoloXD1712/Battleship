@@ -37,32 +37,26 @@ void BattleshipServer::register_player(std::shared_ptr<Player> player) {
     match_players();
 }
 
+
 void BattleshipServer::match_players() {
-    std::vector<std::shared_ptr<Player>> ready_players;
-
-    auto game = std::make_shared<Game>(p1, p2);
-
-    // NUEVO: asignar el juego a los jugadores
-    p1->set_game(game);
-    p2->set_game(game);
-
-
-    for (auto& [_, player] : players_) {
-        if (player->is_ready()) {
-            ready_players.push_back(player);
-        }
-    }
-
     while (ready_players.size() >= 2) {
-        auto p1 = ready_players.back(); ready_players.pop_back();
-        auto p2 = ready_players.back(); ready_players.pop_back();
+        auto p1 = ready_players.front();
+        ready_players.pop_front();
 
+        auto p2 = ready_players.front();
+        ready_players.pop_front();
+
+        // Crear el juego con los dos jugadores
         auto game = std::make_shared<Game>(p1, p2);
-        games_.push_back(game);
+
+        // Asignar el juego a cada jugador
+        p1->set_game(game);
+        p2->set_game(game);
 
         std::cout << "Game started between " << p1->nickname() << " and " << p2->nickname() << std::endl;
 
-        p1->send_message("MATCH_FOUND\nYOUR_TURN\n");
-        p2->send_message("MATCH_FOUND\nWAIT_TURN\n");
+        // Enviar mensajes de inicio de partida
+        p1->send_message("MATCH_FOUND\\nYOUR_TURN\\n");
+        p2->send_message("MATCH_FOUND\\nWAIT_TURN\\n");
     }
 }
