@@ -44,13 +44,25 @@ void Game::process_move(std::shared_ptr<Player> player, int x, int y) {
 
                 if (is_sunk(opponent, ship)) {
                     player->send_message("SUNK\n");
+
+                    // 💥 DEBUG: Barco hundido
+                    std::cout << "[DEBUG] " << player->nickname()
+                              << " hundió un barco de " << ship.length
+                              << " posiciones en (" << x << ", " << y << ") contra "
+                              << opponent->nickname() << "\n";
                 } else {
                     player->send_message("HIT\n");
+
+                    // 🎯 DEBUG: Impacto normal
+                    std::cout << "[DEBUG] " << player->nickname()
+                              << " le dio a un barco en (" << x << ", " << y << ") contra "
+                              << opponent->nickname() << "\n";
                 }
 
                 if (opponent->is_defeated()) {
                     player->send_message("YOU_WIN\n");
                     opponent->send_message("YOU_LOSE\n");
+                    std::cout << "[DEBUG] " << player->nickname() << " ganó la partida.\n";
                 }
 
                 break;
@@ -60,8 +72,13 @@ void Game::process_move(std::shared_ptr<Player> player, int x, int y) {
     }
 
     if (!hit) {
-        opponent->register_hit(x, y); // También registramos los fallos
+        opponent->register_hit(x, y);
         player->send_message("MISS\n");
+
+        // ❌ DEBUG: Fallo
+        std::cout << "[DEBUG] " << player->nickname()
+                  << " falló el disparo en (" << x << ", " << y << ") contra "
+                  << opponent->nickname() << "\n";
     }
 
     // Cambiar turno
@@ -69,6 +86,7 @@ void Game::process_move(std::shared_ptr<Player> player, int x, int y) {
     current_turn_->send_message("YOUR_TURN\n");
     player->send_message("WAIT_TURN\n");
 }
+
 
 std::shared_ptr<Player> Game::get_player1() const {
     return player1_;
