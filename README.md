@@ -17,7 +17,7 @@ La comunicación se basa en la API Berkeley de sockets, y tanto el manejo de tur
 
 El sistema se compone de tres elementos principales:
 
-- **Cliente**: Interfaz en consola (Python) que permite al jugador interactuar con el juego.
+- **Cliente**: Interfaz elaborada en Tkinter (Herramienta de Python) que permite al jugador interactuar con el juego dándole una mejor experiencia.
 - **Servidor**: Componente en C++ que gestiona el estado del juego, aplica las reglas, y administra las conexiones.
 - **Protocolo personalizado**: Define el formato y reglas de intercambio de mensajes entre cliente y servidor.
 
@@ -25,16 +25,27 @@ El sistema se compone de tres elementos principales:
 
 - **Lenguaje del servidor**: C++ (uso obligatorio).
 - **Lenguaje del cliente**: Python 3.x.
-- **Sockets utilizados**: TCP (`SOCK_STREAM`).
+- **Protocolo implementado**: TCP transformado en WebSocket (mediante el cliente)
 - **Concurrencia**: Implementada mediante hilos para permitir múltiples partidas simultáneas.
+- **Librerías utilizadas**:
+  * Boost.Asio / Boost.Beast: Creación del servidor WebSocket
+  * Librería estándar de C++
+  * CMake: Construcción del proyecto
+  * Websockets: Conexión al servidor en tiempo real
+  * Asyncio: Manejo asíncrono de las corrutinas (envío y recepción de mensajes)
+  * Tkinter: Interfaz de usuario, botones y ventanas
 
-### Ejecución del servidor
+### Ejecución del servidor (Si se tiene el código completo)
+
+```bash
+git clone https://github.com/ApoloXD1712/Battleship.git
+```
 
 ```bash
 ./servidor
 ```
 
-### Ejecución del cliente
+### Ejecución del cliente (Para otros jugadores)
 
 ```bash
 ./cliente.py
@@ -45,7 +56,7 @@ El sistema se compone de tres elementos principales:
 El protocolo implementado sigue el formato de texto plano con mensajes estructurados del tipo:
 
 ```
-<TIPO_MENSAJE>|<DATOS>
+<TIPO_MENSAJE>:<DATOS>
 ```
 
 ### Ejemplo de Vocabulario de Mensajes
