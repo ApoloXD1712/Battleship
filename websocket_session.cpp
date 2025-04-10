@@ -1,5 +1,6 @@
 #include "websocket_session.h"
 #include "player.h"
+#include "game.h"
 #include <iostream>
 
 WebSocketSession::WebSocketSession(tcp::socket socket)
