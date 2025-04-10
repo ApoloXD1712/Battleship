@@ -4,6 +4,9 @@
 #include <vector>
 #include "ship.h"
 
+class Game;  // Declaración adelantada
+
+
 class WebSocketSession;
 
 class Player {
