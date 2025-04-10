@@ -46,9 +46,7 @@ std::string Player::extract_message() {
     read_buffer_.erase(0, pos + 1);
     return message;
 }
-std::shared_ptr<Game> Player::get_game() const {
-    return game_;
-}
+
 
 void Player::place_random_ships() {
     ships_.clear();

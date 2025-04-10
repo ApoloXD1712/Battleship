@@ -12,6 +12,7 @@ class WebSocketSession;
 class Player {
 public:
     void set_game(std::shared_ptr<Game> game) { game_ = game; }
+    
     std::shared_ptr<Game> get_game() const { return game_; }
     explicit Player(const std::string& nickname);
 
