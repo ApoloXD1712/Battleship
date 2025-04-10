@@ -2,6 +2,8 @@
 #include "websocket_session.h"
 #include <random>
 #include <algorithm>
+#include <iostream>
+
 
 Player::Player(const std::string& nickname)
     : nickname_(nickname), ready_(false) {}
@@ -58,7 +60,10 @@ void Player::place_random_ships() {
 
     for (int length : ship_lengths) {
         bool placed = false;
-        while (!placed) {
+        int attempts = 0;
+
+        while (!placed && attempts < 100) { // Previene bucles infinitos
+            attempts++;
             bool horizontal = dist_dir(gen);
             int x = dist_pos(gen);
             int y = dist_pos(gen);
@@ -66,15 +71,17 @@ void Player::place_random_ships() {
             int dx = horizontal ? 1 : 0;
             int dy = horizontal ? 0 : 1;
 
+            // Verifica si cabe en el tablero
             if ((horizontal && x + length > 10) || (!horizontal && y + length > 10))
                 continue;
 
+            // Verifica solapamiento
             bool overlap = false;
-            for (const Ship& ship : ships_) {
-                for (int i = 0; i < length; ++i) {
-                    int nx = x + i * dx;
-                    int ny = y + i * dy;
+            for (int i = 0; i < length && !overlap; ++i) {
+                int nx = x + i * dx;
+                int ny = y + i * dy;
 
+                for (const Ship& ship : ships_) {
                     for (int j = 0; j < ship.length; ++j) {
                         int sx = ship.x + j * (ship.horizontal ? 1 : 0);
                         int sy = ship.y + j * (ship.horizontal ? 0 : 1);
@@ -85,7 +92,6 @@ void Player::place_random_ships() {
                     }
                     if (overlap) break;
                 }
-                if (overlap) break;
             }
 
             if (!overlap) {
@@ -93,8 +99,13 @@ void Player::place_random_ships() {
                 placed = true;
             }
         }
+
+        if (!placed) {
+            std::cerr << "Error: No se pudo colocar el barco de longitud " << length << "\n";
+        }
     }
 }
+
 
 const std::vector<Ship>& Player::get_ships() const {
     return ships_;
