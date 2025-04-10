@@ -42,6 +42,13 @@ void Game::process_move(std::shared_ptr<Player> player, int x, int y) {
                 opponent->register_hit(x, y);
                 hit = true;
 
+                 // Enviar mensaje HIT_ME al oponente
+                {
+                    std::string col = std::string(1, 'a' + y);
+                    std::string hit_me = "HIT_ME|" + col + std::to_string(x) + "\n";
+                    opponent->send_message(hit_me);
+                }
+
                 if (is_sunk(opponent, ship)) {
                     player->send_message("SUNK\n");
 

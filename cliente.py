@@ -1,21 +1,20 @@
-
 import asyncio
 import threading
 import tkinter as tk
 from tkinter import messagebox
 import websockets
 
-SERVER_IP = "35.175.146.180"
+SERVER_IP = "52.207.215.7"
 PORT = 8080
-BOARD_SIZE = 10
+BOARD_SIZE = 5
 
 class BattleshipClient:
     def __init__(self, root):
         self.root = root
         self.root.title("Battleship")
-        self.buttons = [[None for _ in range(BOARD_SIZE)] for _ in range(BOARD_SIZE)]
+        self.my_buttons = [[None for _ in range(BOARD_SIZE)] for _ in range(BOARD_SIZE)]
+        self.enemy_buttons = [[None for _ in range(BOARD_SIZE)] for _ in range(BOARD_SIZE)]
         self.nickname = None
-        self.opponent_name = "Esperando oponente..."
         self.websocket = None
         self.last_move = None
         self.status_label = None
@@ -34,31 +33,44 @@ class BattleshipClient:
         for widget in self.root.winfo_children():
             widget.destroy()
 
-    def create_board(self):
+    def create_boards(self):
         self.clear_window()
 
-        top_frame = tk.Frame(self.root)
-        top_frame.pack()
-
-        self.status_label = tk.Label(top_frame, text=f"Jugador: {self.nickname} | Rival: {self.opponent_name}", font=('Arial', 12, 'bold'))
+        self.status_label = tk.Label(self.root, text=f"Jugador: {self.nickname}", font=('Arial', 12, 'bold'))
         self.status_label.pack()
 
         self.turn_label = tk.Label(self.root, text="⏳ Esperando emparejamiento...", font=('Arial', 10))
         self.turn_label.pack()
 
-        frame = tk.Frame(self.root)
-        frame.pack(pady=10)
+        board_frame = tk.Frame(self.root)
+        board_frame.pack(pady=10)
+
+        # Tablero propio
+        tk.Label(board_frame, text="Tu tablero").grid(row=0, column=0)
+        my_frame = tk.Frame(board_frame)
+        my_frame.grid(row=1, column=0, padx=10)
 
         for x in range(BOARD_SIZE):
             for y in range(BOARD_SIZE):
-                btn = tk.Button(frame, text="~", width=4, height=2,
+                btn = tk.Button(my_frame, text="~", width=4, height=2, state='disabled')
+                btn.grid(row=x, column=y)
+                self.my_buttons[x][y] = btn
+
+        # Tablero enemigo
+        tk.Label(board_frame, text="Tablero enemigo").grid(row=0, column=1)
+        enemy_frame = tk.Frame(board_frame)
+        enemy_frame.grid(row=1, column=1, padx=10)
+
+        for x in range(BOARD_SIZE):
+            for y in range(BOARD_SIZE):
+                btn = tk.Button(enemy_frame, text="~", width=4, height=2,
                                 state='disabled',
                                 command=lambda x=x, y=y: self.send_move(x, y))
                 btn.grid(row=x, column=y)
-                self.buttons[x][y] = btn
+                self.enemy_buttons[x][y] = btn
 
-    def set_board_state(self, state):
-        for row in self.buttons:
+    def set_enemy_board_state(self, state):
+        for row in self.enemy_buttons:
             for btn in row:
                 btn.config(state=state)
         self.board_enabled = (state == 'normal')
@@ -68,7 +80,7 @@ class BattleshipClient:
         if not self.nickname:
             messagebox.showerror("Error", "Debes ingresar un nickname.")
             return
-        self.create_board()
+        self.create_boards()
         threading.Thread(target=self.run_client, daemon=True).start()
 
     async def connect(self):
@@ -83,58 +95,58 @@ class BattleshipClient:
             response = response.strip()
 
             if response == "YOU_WIN":
-                self.mark_last_move("X", "green")
+                self.mark_last_enemy("X", "green")
                 self.turn_label.config(text="🎉 ¡Ganaste el juego!")
                 messagebox.showinfo("¡Victoria!", "🎉 ¡Ganaste el juego!")
-                self.set_board_state('disabled')
+                self.set_enemy_board_state('disabled')
                 break
             elif response == "YOU_LOSE":
                 self.turn_label.config(text="☠️ Has perdido el juego.")
                 messagebox.showinfo("Derrota", "☠️ Has perdido el juego.")
-                self.set_board_state('disabled')
+                self.set_enemy_board_state('disabled')
                 break
             elif response == "NOT_YOUR_TURN":
                 self.turn_label.config(text="⏳ No es tu turno.")
-                self.set_board_state('disabled')
             elif response == "HIT":
-                self.mark_last_move("X", "red")
+                self.mark_last_enemy("X", "red")
                 self.turn_label.config(text="🔥 ¡Impacto!")
             elif response == "SUNK":
-                self.mark_last_move("X", "black")
+                self.mark_last_enemy("X", "black")
                 self.turn_label.config(text="🚢 ¡Barco hundido!")
                 messagebox.showinfo("Barco Hundido", "🚢 ¡Hundiste un barco!")
             elif response == "MISS":
-                self.mark_last_move("O", "light blue")
+                self.mark_last_enemy("O", "light blue")
                 self.turn_label.config(text="💨 Fallaste el tiro.")
+            elif response.startswith("HIT_ME|"):
+                coord = response.split("|")[1]
+                x = int(coord[1])
+                y = ord(coord[0]) - ord('a')
+                self.my_buttons[x][y].config(text="X", bg="red")
             elif "MATCH_FOUND" in response:
                 self.turn_label.config(text="🎯 ¡Partida encontrada! Esperando turno...")
             elif "YOUR_TURN" in response:
                 self.turn_label.config(text="🎯 Es tu turno.")
-                self.set_board_state('normal')
+                self.set_enemy_board_state('normal')
             elif "WAIT_TURN" in response:
                 self.turn_label.config(text="🕒 Esperando turno del oponente.")
-                self.set_board_state('disabled')
-            elif response.startswith("OPPONENT|"):
-                self.opponent_name = response.split("|")[1]
-                self.status_label.config(text=f"Jugador: {self.nickname} | Rival: {self.opponent_name}")
+                self.set_enemy_board_state('disabled')
             else:
                 print("Respuesta desconocida:", response)
 
-    def mark_last_move(self, text, color):
+    def mark_last_enemy(self, text, color):
         if self.last_move:
             x, y = self.last_move
-            self.buttons[x][y].config(text=text, bg=color)
+            self.enemy_buttons[x][y].config(text=text, bg=color)
 
     def coords_to_label(self, x, y):
         col_letter = chr(ord('a') + y)
         return f"{col_letter}{x}"
 
     async def send_move_async(self, x, y):
-        if self.board_enabled:
-            self.last_move = (x, y)
-            coord = self.coords_to_label(x, y)
-            await self.websocket.send(f"FIRE:{coord}")
-            self.set_board_state('disabled')  # bloquear hasta nueva respuesta
+        self.last_move = (x, y)
+        coord = self.coords_to_label(x, y)
+        await self.websocket.send(f"FIRE:{coord}")
+        self.set_enemy_board_state('disabled')
 
     def send_move(self, x, y):
         asyncio.run_coroutine_threadsafe(self.send_move_async(x, y), self.loop)
