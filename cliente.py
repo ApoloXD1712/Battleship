@@ -21,6 +21,8 @@ class BattleshipClient:
         self.turn_label = None
         self.board_enabled = False
         self.create_login_screen()
+        self.root.config(bg="light blue")
+
 
     def create_login_screen(self):
         self.clear_window()
@@ -36,34 +38,38 @@ class BattleshipClient:
     def create_boards(self):
         self.clear_window()
 
-        self.status_label = tk.Label(self.root, text=f"Jugador: {self.nickname}", font=('Arial', 12, 'bold'))
+        self.status_label = tk.Label(self.root, text=f"Jugador: {self.nickname}", font=('Arial', 12, 'bold'),)
         self.status_label.pack()
+        self.status_label.config(bg="light blue")
 
         self.turn_label = tk.Label(self.root, text="⏳ Esperando emparejamiento...", font=('Arial', 10))
         self.turn_label.pack()
+        self.turn_label.config(bg="light blue")
 
         board_frame = tk.Frame(self.root)
         board_frame.pack(pady=10)
+        board_frame.config(bg="light blue")
 
         # Tablero propio
-        tk.Label(board_frame, text="Tu tablero").grid(row=0, column=0)
+        tk.Label(board_frame, text="Tu tablero", background="light blue").grid(row=0, column=0)
         my_frame = tk.Frame(board_frame)
         my_frame.grid(row=1, column=0, padx=10)
+        
 
         for x in range(BOARD_SIZE):
             for y in range(BOARD_SIZE):
-                btn = tk.Button(my_frame, text="~", width=4, height=2, state='disabled')
+                btn = tk.Button(my_frame, text="☢", width=4, height=2, state='disabled')
                 btn.grid(row=x, column=y)
                 self.my_buttons[x][y] = btn
 
         # Tablero enemigo
-        tk.Label(board_frame, text="Tablero enemigo").grid(row=0, column=1)
+        tk.Label(board_frame, text="Tablero enemigo", background="light blue").grid(row=0, column=1)
         enemy_frame = tk.Frame(board_frame)
         enemy_frame.grid(row=1, column=1, padx=10)
 
         for x in range(BOARD_SIZE):
             for y in range(BOARD_SIZE):
-                btn = tk.Button(enemy_frame, text="~", width=4, height=2,
+                btn = tk.Button(enemy_frame, text="☠", width=4, height=2,
                                 state='disabled',
                                 command=lambda x=x, y=y: self.send_move(x, y))
                 btn.grid(row=x, column=y)
