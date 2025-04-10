@@ -1,6 +1,7 @@
 #include "game.h"
 #include "ship.h"
 #include <algorithm>
+#include <iostream>
 
 Game::Game(std::shared_ptr<Player> p1, std::shared_ptr<Player> p2)
     : player1_(p1), player2_(p2), current_turn_(p1) {
@@ -20,6 +21,13 @@ void Game::process_move(std::shared_ptr<Player> player, int x, int y) {
     }
 
     std::shared_ptr<Player> opponent = (player == player1_) ? player2_ : player1_;
+
+    // 🔒 Validar si la casilla ya fue atacada
+    if (std::find(opponent->get_hits().begin(), opponent->get_hits().end(), std::make_pair(x, y)) != opponent->get_hits().end()) {
+        player->send_message("ALREADY_HIT\n");
+        return;
+    }
+
     bool hit = false;
 
     for (const Ship& ship : opponent->get_ships()) {
@@ -52,10 +60,11 @@ void Game::process_move(std::shared_ptr<Player> player, int x, int y) {
     }
 
     if (!hit) {
+        opponent->register_hit(x, y); // También registramos los fallos
         player->send_message("MISS\n");
     }
 
-    // Switch turn
+    // Cambiar turno
     current_turn_ = opponent;
     current_turn_->send_message("YOUR_TURN\n");
     player->send_message("WAIT_TURN\n");

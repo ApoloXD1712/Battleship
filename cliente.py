@@ -7,7 +7,7 @@ import websockets
 
 SERVER_IP = "35.175.146.180"
 PORT = 8080
-BOARD_SIZE = 5
+BOARD_SIZE = 10
 
 class BattleshipClient:
     def __init__(self, root):

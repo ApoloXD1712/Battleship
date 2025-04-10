@@ -51,59 +51,65 @@ std::string Player::extract_message() {
 
 
 void Player::place_random_ships() {
-    ships_.clear();
     static const std::vector<int> ship_lengths = {5, 4, 3, 3, 2};
     std::random_device rd;
     std::mt19937 gen(rd());
     std::uniform_int_distribution<> dist_dir(0, 1);
     std::uniform_int_distribution<> dist_pos(0, 9);
 
-    for (int length : ship_lengths) {
-        bool placed = false;
-        int attempts = 0;
+    bool success = false;
+    while (!success) {
+        ships_.clear();
+        success = true;
 
-        while (!placed && attempts < 100) { // Previene bucles infinitos
-            attempts++;
-            bool horizontal = dist_dir(gen);
-            int x = dist_pos(gen);
-            int y = dist_pos(gen);
+        for (int length : ship_lengths) {
+            bool placed = false;
+            int attempts = 0;
 
-            int dx = horizontal ? 1 : 0;
-            int dy = horizontal ? 0 : 1;
+            while (!placed && attempts < 100) {
+                attempts++;
+                bool horizontal = dist_dir(gen);
+                int x = dist_pos(gen);
+                int y = dist_pos(gen);
 
-            // Verifica si cabe en el tablero
-            if ((horizontal && x + length > 10) || (!horizontal && y + length > 10))
-                continue;
+                int dx = horizontal ? 1 : 0;
+                int dy = horizontal ? 0 : 1;
 
-            // Verifica solapamiento
-            bool overlap = false;
-            for (int i = 0; i < length && !overlap; ++i) {
-                int nx = x + i * dx;
-                int ny = y + i * dy;
+                if ((horizontal && x + length > 10) || (!horizontal && y + length > 10))
+                    continue;
 
-                for (const Ship& ship : ships_) {
-                    for (int j = 0; j < ship.length; ++j) {
-                        int sx = ship.x + j * (ship.horizontal ? 1 : 0);
-                        int sy = ship.y + j * (ship.horizontal ? 0 : 1);
-                        if (nx == sx && ny == sy) {
-                            overlap = true;
-                            break;
+                bool overlap = false;
+                for (int i = 0; i < length && !overlap; ++i) {
+                    int nx = x + i * dx;
+                    int ny = y + i * dy;
+
+                    for (const Ship& ship : ships_) {
+                        for (int j = 0; j < ship.length; ++j) {
+                            int sx = ship.x + j * (ship.horizontal ? 1 : 0);
+                            int sy = ship.y + j * (ship.horizontal ? 0 : 1);
+                            if (nx == sx && ny == sy) {
+                                overlap = true;
+                                break;
+                            }
                         }
+                        if (overlap) break;
                     }
-                    if (overlap) break;
+                }
+
+                if (!overlap) {
+                    ships_.push_back({x, y, horizontal, length});
+                    placed = true;
                 }
             }
 
-            if (!overlap) {
-                ships_.push_back({x, y, horizontal, length});
-                placed = true;
+            if (!placed) {
+                success = false; // falló colocar este barco, reiniciar todo
+                break;
             }
         }
-
-        if (!placed) {
-            std::cerr << "Error: No se pudo colocar el barco de longitud " << length << "\n";
-        }
     }
+
+    std::cout << "DEBUG: Se colocaron " << ships_.size() << " barcos correctamente.\n";
 }
 
 
