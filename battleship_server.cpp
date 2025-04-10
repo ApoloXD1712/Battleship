@@ -34,8 +34,13 @@ void BattleshipServer::start_accept() {
 void BattleshipServer::register_player(std::shared_ptr<Player> player) {
     std::lock_guard<std::mutex> lock(mutex_);
     players_[player->nickname()] = player;
-    match_players();
+
+    if (player->is_ready()) {
+        ready_players.push_back(player);
+        match_players();
+    }
 }
+
 
 
 void BattleshipServer::match_players() {

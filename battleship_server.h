@@ -6,6 +6,7 @@
 #include <vector>
 #include <memory>
 #include <mutex>
+#include <deque>
 #include "player.h"
 #include "game.h"
 
@@ -22,6 +23,7 @@ private:
     boost::asio::ip::tcp::acceptor acceptor_;
     std::unordered_map<std::string, std::shared_ptr<Player>> players_;
     std::vector<std::shared_ptr<Game>> games_;
+    std::deque<std::shared_ptr<Player>> ready_players;
     std::mutex mutex_;
 };
 
