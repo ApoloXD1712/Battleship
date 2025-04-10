@@ -40,6 +40,13 @@ void BattleshipServer::register_player(std::shared_ptr<Player> player) {
 void BattleshipServer::match_players() {
     std::vector<std::shared_ptr<Player>> ready_players;
 
+    auto game = std::make_shared<Game>(p1, p2);
+
+    // NUEVO: asignar el juego a los jugadores
+    p1->set_game(game);
+    p2->set_game(game);
+
+
     for (auto& [_, player] : players_) {
         if (player->is_ready()) {
             ready_players.push_back(player);

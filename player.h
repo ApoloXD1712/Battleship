@@ -8,6 +8,8 @@ class WebSocketSession;
 
 class Player {
 public:
+    void set_game(std::shared_ptr<Game> game) { game_ = game; }
+    std::shared_ptr<Game> get_game() const { return game_; }
     explicit Player(const std::string& nickname);
 
     void set_session(std::shared_ptr<WebSocketSession> session);
@@ -31,9 +33,11 @@ public:
 
 private:
     std::string nickname_;
+    std::shared_ptr<Game> game_;
     bool ready_ = false;
     std::shared_ptr<WebSocketSession> session_;
     std::string read_buffer_;
     std::vector<Ship> ships_;
     std::vector<std::pair<int, int>> hits_;
+    
 };
