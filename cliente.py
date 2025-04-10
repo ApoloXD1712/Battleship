@@ -26,7 +26,7 @@ class BattleshipClient:
 
     def create_login_screen(self):
         self.clear_window()
-        tk.Label(self.root, text="Ingresa tu nickname:").pack()
+        tk.Label(self.root, text="Ingresa tu nombre de usuario:").pack()
         self.nick_entry = tk.Entry(self.root)
         self.nick_entry.pack()
         tk.Button(self.root, text="Conectar", command=self.start_game).pack()
