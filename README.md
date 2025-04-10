@@ -72,7 +72,7 @@ Este protocolo es responsable de mantener sincronizados los estados de ambos jug
 - Detección de desconexiones.
 - Implementación de una interfaz gráfica sencilla
 
-## Aspectos No Logrados / Posibles Mejoras
+## Posibles Mejoras
 
 - Persistencia de estadísticas de partidas.
 - Mejor manejo de errores inesperados.
